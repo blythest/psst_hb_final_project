@@ -1,14 +1,115 @@
 {% extends 'base.html' %}
-{% block body %}
-{% for post in posts %}
-<div class="post">
-    <h2><a href="{{url_for("view_post", id=post.id)}}">{{post.title}}</a></h2>
-    <p>
-        {{post.body | markdown}}
-    </p>
-</div>
-{% else %}
-No posts here!
-<a href="{{url_for("new_post")}}">New post</a>
-{% endfor %}
-{% endblock %}
+{% block container %}
+
+<style type= 'text.css'>
+
+.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+`{
+  stroke: #999;
+  stroke-opacity: .6;
+}
+
+
+
+</style>
+<script>
+
+var width = 960,
+    height = 500;
+
+var color = d3.scale.category20();
+
+var force = d3.layout.force()
+    .charge(-120)
+    .linkDistance(30)
+    .size([width, height]);
+
+d3.json("static/nmap_for_d3.json", function(error, graph) {
+  force
+      .nodes(graph.nodes)
+      .links(graph.links)
+      .start();
+
+	var svg = d3.select("body").append("svg")
+    	.attr("width", width)
+    	.attr("height", height);
+	
+	var link = svg.selectAll(".link")
+		.data(graph.links)
+    .enter().append("line")
+    	.attr("class", "link")
+      // set the attribute, class with the name link on all links
+    	.style("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+	var node = svg.selectAll(".node")
+		.data(graph.nodes)
+	.enter().append("circle")
+		.attr("text", function(d) { return d.name})
+		.attr("class", "node")
+		.attr("r", 6)
+		.attr("text", function(d) {
+			return d.name;
+
+		})
+		.style("fill", function(d) { return color(d.group); })
+		.call(force.drag);
+	
+
+	var text = svg.selectAll("text")
+		.data(graph.nodes)
+		.enter()
+		.append("text");
+
+	// var text = svg.selectAll(".node")
+	// 	.attr("r", 6)
+	// 	.attr("cx", 20)
+	// 	.attr("cy", 52)
+	// 	.on("mouseover", function(){return tooltip.style("visibility", "visible");})
+	// 	.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+	// 	.on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+
+
+	var textLabels = text
+		.attr("x", function(d) { return d.x; })
+		.attr("y", function(d) { return d.y; })
+		.text( function (d) { return d.name; })
+		.attr("font-family", "sans-serif")
+		.attr("font-size", "10px")
+		.attr("fill", "red");
+
+	console.log(textLabels)
+
+	var tooltip = d3.select("body")
+		.append("div")
+		.style("position", "absolute")
+		.style("z-index", "10")
+		.style("visibility", "hidden")
+		.text('hi');
+		
+	
+	// attack the value of the key, "nodes"
+	// within all the json data, to node, the variable array. 
+	// data is a property of each node-circle 
+  force.on("tick", function() {
+  	// "on": Registers the specified listener to receive events of the specified type from the force layout. 
+  	// Runs the force layout simulation one step.
+  	// Here, we set the positions. 
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node.attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+  });
+});
+
+
+</script>
+
+
+	{% endblock %}
