@@ -1,31 +1,115 @@
 {% extends 'base.html' %}
 {% block container %}
 
-<style type= 'text.css'>
+<style type= 'text/css'>
+
+body {
+	color:#333;
+	font-size: 16px;
+}
+
 
 .node {
   stroke: #fff;
   stroke-width: 1.5px;
 }
 
-`{
+.link{
   stroke: #999;
   stroke-opacity: .6;
 }
 
 
+#os-info {
+	margin-left:-97px;
+	margin-top:45px;
+	height: 200px;
+	position:fixed;
+	width:180px;
+	-moz-border-radius: 50px;
+	-webkit-border-radius: 50px;
+	border-radius: 3px;
+	border-color:white;
+	background-color:rgba(251, 240, 208,0.7);
+	/*FFFCE6*/;
+}
+
+#services-info {
+	margin-left:-97px;
+	margin-top:300px;
+	text-align:left;
+	padding-left:15px;
+	height: 100px;
+	position:absolute;
+	width:180px;
+	-moz-border-radius: 50px;
+	-webkit-border-radius: 50px;
+	border-radius: 3px;
+	border-color:white;
+	font-size:14px;
+
+	background-color:rgba(30, 169, 125,0.7);
+}
+
+h1 {
+	margin-top:10px;
+	margin-left:10px;
+	font-size:16px;
+}
+
+#square {
+	width: 20px;
+	height: 20px;
+	margin-bottom:7px;
+}
+
+
+.squares{
+	margin-top:23px;
+	margin-left:10px;
+}
 
 </style>
+
+<div id="os-info">
+	<h1>Operating Systems</h1>
+	<div class="squares">
+		<div id="square" style="background:#FF2B1A;">
+			<p style="width:90px; margin-left:30px;font-size:14px;">LINUX</p>
+		</div>
+		<div id="square" style="background:#271192">
+			<p style="margin-left:30px; font-size:12px;">UNKNOWN</p>
+		</div>
+		<div id="square" style = "background:#E1B594">
+			<p style="width:90px; margin-left:30px; font-size:14px;">MAC OS X</p>
+		</div>
+		<div id="square" style = "background:#20B8FE">
+			<p style="margin-left:30px; font-size:14px;">iPHONE</p>
+		</div>
+		<div id="square" style = "background:#90B84C">
+			<p style="margin-left:30px; font-size:14px;">WINDOWS</p>
+		</div>
+	</div>
+</div>
+
+<div id="services-info">
+	<h1>Services Running</h1>
+	
+</div>
+
 <script>
 
-var width = 960,
-    height = 500;
+var width = 900,
+    height = 550;
 
-var color = d3.scale.category20();
+
+var color = d3.scale.category10()
+	.range(["#FF2B1A","#271192","#20B8FE","#E1B594","#90B84C"]);
 
 var force = d3.layout.force()
-    .charge(-120)
-    .linkDistance(30)
+    .charge(-90)
+    .linkStrength(0.2)
+    .linkDistance(134)
     .size([width, height]);
 
 d3.json("static/nmap_for_d3.json", function(error, graph) {
@@ -35,6 +119,10 @@ d3.json("static/nmap_for_d3.json", function(error, graph) {
       .start();
 
 	var svg = d3.select("body").append("svg")
+		.style("margin-top", "20px")
+		.style("margin-bottom", "30px")
+		.style("margin-right", "10px")
+		.style("float","right")
     	.attr("width", width)
     	.attr("height", height);
 	
@@ -48,56 +136,110 @@ d3.json("static/nmap_for_d3.json", function(error, graph) {
 	var node = svg.selectAll(".node")
 		.data(graph.nodes)
 	.enter().append("circle")
-		.attr("text", function(d) { return d.name})
 		.attr("class", "node")
-		.attr("r", 6)
-		.attr("text", function(d) {
+		.attr("r", 7)
+		.attr("name", function(d) {
 			return d.name;
-
 		})
-		.style("fill", function(d) { return color(d.group); })
+		.attr("portService", function(d) {
+			return d.PortService;
+		})
+		.style("fill", function(d) { console.log(d.group);return color(d.group); })
 		.call(force.drag);
-	
 
-	var text = svg.selectAll("text")
-		.data(graph.nodes)
-		.enter()
+
+	var servicesBox = d3.select(document.getElementById("services-info"))
 		.append("text");
 
-	// var text = svg.selectAll(".node")
-	// 	.attr("r", 6)
-	// 	.attr("cx", 20)
-	// 	.attr("cy", 52)
-	// 	.on("mouseover", function(){return tooltip.style("visibility", "visible");})
-	// 	.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-	// 	.on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+	function checkForEmptyServices(node) {
 
+		/*
+		* Takes in the D3 HTML object in the format:
+		* <circle class="node" r="7" name="64:5A:04:87:30:0E portService="netbiOSssn"
+		* fill = "aliceblue" cx="277.707" cy="207.75" style="fill:#537897;"></circle>
+		* returns a string of text.  
+		*/
 
-	var textLabels = text
-		.attr("x", function(d) { return d.x; })
-		.attr("y", function(d) { return d.y; })
-		.text( function (d) { return d.name; })
-		.attr("font-family", "sans-serif")
-		.attr("font-size", "10px")
-		.attr("fill", "red");
+		var name = node.__data__.name
+		var ports = node.__data__.PortService
+		var os_version = node.__data__.OSMatch
+		// var os = node._data_.OSMatch
 
-	console.log(textLabels)
+		if (ports === "") {		
+			return "host" + name + " " + "<p>" +  "<p> has no open ports.</p>";
+		} else {
+			return "host " + name + " " + "<p> is running " + "<b>" + ports + "<b></p>";
+		}
+	};
+
+	function checkForEmptyOSMatches(node) {
+
+		/*
+		* Takes in the D3 HTML object in the format:
+		* <circle class="node" r="7" name="64:5A:04:87:30:0E portService="netbiOSssn"
+		* fill = "aliceblue" cx="277.707" cy="207.75" style="fill:#537897;"></circle>
+		* returns a string of text.  
+		*/
+
+		var name = node.__data__.name
+		var os_version = node.__data__.OSMatch
+		// var os = node._data_.OSMatch
+
+		if (os_version === "") {		
+			return "<p>OS Version unavailable.</p>";
+		} else {
+			return "<p>" + os_version + "</p>";
+		}
+	};
+
 
 	var tooltip = d3.select("body")
 		.append("div")
 		.style("position", "absolute")
 		.style("z-index", "10")
 		.style("visibility", "hidden")
-		.text('hi');
+
 		
+	d3.selectAll(".node")
+		// .append("svg:circle")
+		.attr("fill", "aliceblue")
+		.attr("r", 7)
+		.attr("cx", 50)
+		.attr("cy", 50)
+
+
+		.on("mouseover", function(){
+			tooltip.html(checkForEmptyOSMatches(this))
+			servicesBox.append("text").html(checkForEmptyServices(this))
+			return tooltip.style("visibility", "visible");}
+			)
+
+		.on("mousemove", function(){
+			return tooltip.style("top", (event.pageY-10)+"px")
+			.style("left",(event.pageX+10)+"px")
+			.style("max-width","150px")
+			.style("background-color", "rgba(163, 224, 255, 0.9)")
+			.style("padding", "10px")
+			.style("border-style", "solid")
+			.style("border-color", "fff")
+			.style("border-width", "1px")
+			.style("border-radius", ".3em")
+			.style("text-align", "center");})
+		.on("mouseout", function(){
+			return tooltip.style("visibility", "hidden"),
+			servicesBox.html(" ")
+		})
+ 
+
+
+	force.on("tick", function() {
 	
-	// attack the value of the key, "nodes"
-	// within all the json data, to node, the variable array. 
-	// data is a property of each node-circle 
-  force.on("tick", function() {
-  	// "on": Registers the specified listener to receive events of the specified type from the force layout. 
-  	// Runs the force layout simulation one step.
-  	// Here, we set the positions. 
+	/*
+  	*  "on": Registers the specified listener to receive events of the specified type from the 
+  	* force layout. Runs the force layout simulation one step.
+  	* Here, we set the positions. 
+  	*/
+    
     link.attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
         .attr("x2", function(d) { return d.target.x; })
