@@ -1,9 +1,12 @@
 import BeautifulSoup
 import json
+import os
+import datetime
 
-xml_doc = BeautifulSoup.BeautifulSoup(open("static/nmap_raw.xml"))
 
-hosts = xml_doc.findAll("host")
+def modification_date(filename):
+    t = os.path.getmtime(filename)
+    return datetime.datetime.fromtimestamp(t)
 
 def get_node_id(host):
 
@@ -20,6 +23,17 @@ def get_node_id(host):
             host_id = address.split('\n')[0].split('"')[1]
             return host_id
 
+def get_group_number_from_name(name):
+    if "Apple Mac OS X" in name:
+        return 1
+    elif "Linux" in name:
+        return 2
+    elif "Microsoft Windows" in name:
+        return 3
+    elif "iPhone" in name:
+        return 4
+    else:
+        return 5
 
 def check_if_unicode(entry):
     try:
@@ -111,12 +125,12 @@ def get_common_os(tuple_list):
     ("Linux 2.4.21 - 2.4.31 (embedded)", "https").
     Returns a dictionary of indexes that share an os.
     """
-
     common_os_dict = {}
     # common_protocol_dict = {}
     itr = 0
-    
+
     for t in tuple_list:
+   
         os_key = get_group_number_from_name(t[0])
 
         if os_key in common_os_dict:
@@ -164,6 +178,7 @@ def get_all_possible_os_pairings(indices_list):
                     pairs.append(pair)
     return pairs
 
+
 def get_sources_and_targets(index_pairings):
 
     """
@@ -195,7 +210,7 @@ def create_nodes_dictionary(h):
     node_dictionary['Links'] = [get_os_match(h), get_ports_services(h)]
     node_dictionary['PortServices'] = get_ports_services(h)
     node_dictionary['OSMatch'] = get_os_match(h)
-    node_dictionary['Group'] = get_group_number_from_name(get_os_match(h))
+    node_dictionary['group'] = get_group_number_from_name(get_os_match(h))
     node_dictionary['OSType'] = get_os_class(h)
 
     return node_dictionary
@@ -208,30 +223,31 @@ def get_links(hosts):
     return links_list
 
 
+def modification_date(filename):
+    time_stamp = os.path.getmtime(filename)
+    return datetime.datetime.fromtimestamp(t)
 
-def get_group_number_from_name(name):
-    if "Apple Mac OS X" in name:
-        return 1
-    elif "Linux" in name:
-        return 2
-    elif "Microsoft Windows" in name:
-        return 3
-    elif "iPhone" in name:
-        return 4
-    else:
-        return 5
 
-# def get_links(nodes_dict):
-#     print nodes_dict.values()
+last_modifed = modification_date("static/nmap_raw.xml")
 
-json_blob_dictionary = {}
-json_blob_dictionary = {"nodes" : make_dictionaries(hosts)}
+xml_doc = BeautifulSoup.BeautifulSoup(open("static/nmap_raw.xml"))
+
+
+hosts = xml_doc.findAll("host")
+
 
 links_list = get_links(hosts)
 pairings = get_common_os(links_list)
-indices_list = get_os_indices_list(pairings)
-print get_all_possible_os_pairings(indices_list)
 
-# print get_sources_and_targets(pairings)
-# file_output = open("static/json_dictionary.json", "w")
-# json.dump(json_blob_dictionary, file_output)
+indices_list = get_os_indices_list(pairings)
+
+pairs = get_all_possible_os_pairings(indices_list)
+
+links = get_sources_and_targets(pairs)
+
+json_blob_dictionary = {}
+json_blob_dictionary = {"nodes" : make_dictionaries(hosts), "links" : links}
+# print json_blob_dictionary
+
+file_output = open("static/json_dictionary.json", "w")
+json.dump(json_blob_dictionary, file_output)
