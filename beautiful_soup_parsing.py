@@ -228,26 +228,29 @@ def modification_date(filename):
     return datetime.datetime.fromtimestamp(t)
 
 
-last_modifed = modification_date("static/nmap_raw.xml")
+# last_modifed = modification_date("static/nmap_raw.xml")
 
-xml_doc = BeautifulSoup.BeautifulSoup(open("static/nmap_raw.xml"))
+def main(pathname):
+
+    xml_doc = BeautifulSoup.BeautifulSoup(open(pathname))
+    hosts = xml_doc.findAll("host")
+
+    links_list = get_links(hosts)
+    pairings = get_common_os(links_list)
+
+    indices_list = get_os_indices_list(pairings)
+
+    pairs = get_all_possible_os_pairings(indices_list)
+
+    links = get_sources_and_targets(pairs)
+
+    json_blob_dictionary = {}
+    json_blob_dictionary = {"nodes" : make_dictionaries(hosts), "links" : links}
 
 
-hosts = xml_doc.findAll("host")
+    file_output = open("static/json_dictionary.json", "w")
+    json.dump(json_blob_dictionary, file_output)
 
 
-links_list = get_links(hosts)
-pairings = get_common_os(links_list)
-
-indices_list = get_os_indices_list(pairings)
-
-pairs = get_all_possible_os_pairings(indices_list)
-
-links = get_sources_and_targets(pairs)
-
-json_blob_dictionary = {}
-json_blob_dictionary = {"nodes" : make_dictionaries(hosts), "links" : links}
-# print json_blob_dictionary
-
-file_output = open("static/json_dictionary.json", "w")
-json.dump(json_blob_dictionary, file_output)
+if __name__ == '__main__':
+    main("static/nmap_raw.xml")
