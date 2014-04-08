@@ -24,9 +24,5 @@ The web app runs on Python's Flask framework.
 **base.html, index.html, **
 The front-end makes use of D3, Bootstrap, and Jinja. These files are stored in Templates. 
 
-![busy-hb][image-1]
-
-![not-busy-hb][image-2]
-
-[image-1]:	static/img/hb-network.png
-[image-2]:	static/img/hb-today.png
+![busy-hb](static/img/hb-network.png)
+![not-busy-hb](static/img/hb-today.png)
