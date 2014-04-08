@@ -1,4 +1,5 @@
 **Psst, Your Telnet Is Showing**
+================================
 
 The Psst, Your Telnet Is Showing application visualizes information about hosts connected to the user's network. Psst scans for open ports to get the dirt on who's available: their IP addresses, which ports are open, what version of operating system they're running, and type of device. It displays the information as an interactive user interface, created in D3. 
 
@@ -11,7 +12,7 @@ To find which hosts are available, I used FPing,  which sends Internet Control M
 
 Port scanning is handled using Python's NMAP (Network Mapper) module. NMAP is a security scanner that sends packets to target the available hosts and outputs the result in XML. 
 
-**beautiful__soup__parser.py**
+**beautiful\_\_soup\_\_parser.py**
 
 Parses the XML output from portscanner.py into JSON, which D3 handles better.
 
@@ -23,7 +24,9 @@ The web app runs on Python's Flask framework.
 **base.html, index.html, **
 The front-end makes use of D3, Bootstrap, and Jinja. These files are stored in Templates. 
 
-![busy-hb](static/img/hb-network.png)
+![busy-hb][image-1]
 
-![not-busy-hb](static/img/hb-today.png)
+![not-busy-hb][image-2]
 
+[image-1]:	static/img/hb-network.png
+[image-2]:	static/img/hb-today.png
