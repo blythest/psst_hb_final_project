@@ -30,7 +30,7 @@ Routes:
 
 **Background Process**
 **(daemon.py)**
-Script to run portscanner.py as a background process. Ensures that only one scan can run at a time. If user tries to run an additional scan while one is already in progress, the daemon will send an error message. Performs UNIX [double fork magic]()(http://joyrex.spc.uchicago.edu/bookshelves/python/cookbook/pythoncook-CHP-6-SECT-8.html) in Python.
+Script to run portscanner.py as a background process. Ensures that only one scan can run at a time. If user tries to run an additional scan while one is already in progress, the daemon will send an error message. Performs UNIX [double fork magic](http://joyrex.spc.uchicago.edu/bookshelves/python/cookbook/pythoncook-CHP-6-SECT-8.html) in Python.
 
 **User Interface**
 **(base.html, index.html)**
