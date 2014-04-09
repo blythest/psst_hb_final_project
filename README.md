@@ -17,12 +17,13 @@ To find which hosts are available, I used FPing,  which sends Internet Control M
 
 Port scanning is handled using Python's NMAP (Network Mapper) module. NMAP is a security scanner that sends packets to target the available hosts and outputs the result in XML. 
 
-**beautiful__soup__parsing.py**
+Parsing with Beautiful Soup
+**(beautiful__soup__parsing.py)**
 
 Parses the XML output from portscanner.py into JSON, which D3 handles better.
 
 **Flask Views (aka the Controller) **
-**views.py**
+**(views.py)**
 The web app runs on Python's Flask framework.
 Routes:
 “/”: displays the main index.
