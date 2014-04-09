@@ -1,16 +1,18 @@
-import sys, socket, select, ipaddress
+import sys, socket, select, ipaddress, psutil
 import beautiful_soup_parsing
 import nmap
 from subprocess import * 
 import os
 import shlex
-# to open chrome from the command line : popen and a bunch of diff arguments 
+
+LOCKFILE = '.lock'
 
 def get_command_output(arguments, stderr=STDOUT):
     """
     arguments: A sequence of command arguments.
-    Returns TODO
+    Returns the output of the command line program. 
     """
+    print "[get_command_output] %r" % arguments
     return Popen(arguments, stdout=PIPE,stderr=stderr).communicate()[0]
 
 def find_available_hosts(hostnames):
@@ -38,51 +40,14 @@ def scan(available_hosts):
     Available hosts: iterable of hostnames (names or IP addresses) that respond to a network.
     Returns iterable of open port numbers, possible os, devices for each available host. 
     """
- 
-    command = ["sudo","nmap", "PortScanner()", "-PN", "-O", "-oX", "-"] + available_hosts
+    print 'scanning now'
+    command = ["nmap", "PortScanner()", "-PN", "-O", "-oX", "-"] + available_hosts
     print 'command ', command
+    # print 'command ', command
     scan_output = get_command_output(command)
-    print 'scan output: ', scan_output
+    # print 'scan output: ', scan_output
     return scan_output
 
-# def find_open_ports(scan_output):
-#     """
-#     scan_output: an iterable of network scan results for available hosts.
-#     Returns iterable of open port numbers and corresponding protocols for each available host.
-#     """
-    
-#     for r in scan_output:
-#         if 'open port' not in r:
-#             continue
-#         open_port = r.split()[0]
-#         yield open_port
-
-
-# def parse_scans(results):
-#     """
-#     TODO
-#     """
-
-#     print 'parsing the nmap port data ...'
-#     tcps = {}
-#     result = ''
-
-#     # Rather than parse the hard-to-parse default nmap output, instead try
-#     # the "greppable" or XML formats: http://nmap.org/book/output.html
-
-#     for result in results:
-#         # grab only the strings with 'tcp/port-number open protocol'
-#         # beautiful, I know. 
-#         host = str(result.split('Discovered')[1]).split(',')[0]
-#         print host.split(' ')[-1]
-#         result = result.split('STATE SERVICE')[1].split('MAC')[0].replace("'","")
-#         pair = result.split('open')
-#         key = str(pair[0]).strip().replace(",","")
-#         value = str(pair[1]).strip().replace(",","")
-#         tcps[key] = value
-
-#     print tcps
- 
 
 def listHosts(ip):
 
@@ -105,19 +70,6 @@ def pingscan(hosts):
     return resp
 
 
-# def portscan(resp):
-#     # if a port on a remote host is open for incoming connection requests
-#     # and you send it a SYN packet, the remote host will respond
-#     # with a SYN-ACK packet. if closed, sends RST packet
-
-#     statuses = []
-#     for r in range(len(resp)-1):
-#         host_address = str(resp[r])
-#         port_status = sr1(IP(dst=host_address)/TCP(dport=80,flags="S"),timeout=2, retry=-3)
-#         statuses.append(port_status)
-
-#     return statuses
-
 def getTraceroute():
     
     # using traceroute to get public IP addresses
@@ -129,13 +81,11 @@ def getTraceroute():
         return
 
 
-    # response.get_trace() returns a dictionary in a dictionary
     host_key = response.get_trace().keys()[0]
     if len(host_key) <= 15:
         return host_key
     else:
         for key in response.get_trace()[host_key].keys():
-            # get a list of ip's
             hops.append(response.get_trace()[host_key][key][0])
         return hops
 
@@ -164,14 +114,15 @@ def main(netmask,ip,filename):
 
     snet = int(ipaddress.IPv4Address(source_ip & subnetmask))
     snet = ipaddress.IPv4Address(snet)
-    # print 'source ip',source_ip
-    # snet = subnetmask & source_ip
     all_hosts = listHosts(snet)
 
     
     available_hosts = find_available_hosts(all_hosts)
+    print available_hosts
     results = scan(available_hosts)
-    # print results
+    print results
+   
+
 
     nmap_xml_output = open(filename, 'w')
     nmap_xml_output.write(results)
@@ -184,15 +135,33 @@ def main(netmask,ip,filename):
 if __name__== "__main__":
 
     from getopt import getopt
-  
+
+    # check if pid is set to something.
+    # if so, check if process is running.
+
+    try:
+        pid = os.readlink(LOCKFILE)
+        if psutil.pid_exists(int(pid)):
+            print 'portscanner already running.'
+            os.sys.exit()
+        else:
+            os.unlink(LOCKFILE)
+    except OSError:
+        pass
+            # make file
+    os.symlink(str(os.getpid()), LOCKFILE)
+
     netmask = NETMASK
+    print netmask
 
     ip = IP
+    print ip
 
     filename = FILENAME
+    print filename
 
     opts,vals = getopt(sys.argv[1:],'n:p:f:')
-    print opts, ' ,', vals
+    # print 'opts ', opts, ' ,', 'vals ',vals
 
     for option, arg in opts:
         if option == '-n':
@@ -203,6 +172,7 @@ if __name__== "__main__":
             ip = arg
 
     main(netmask, ip, filename)
+    os.unlink(LOCKFILE)
 
   
 
