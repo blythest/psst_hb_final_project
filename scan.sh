@@ -6,6 +6,8 @@ echo 'Install all the things!'
 ls
 cat /etc/passwd
 
-source env/bin/activate
+virtualenv virtualenv
+source virtualenv/bin/activate
 pip install -r requirements.txt
-open http://localhost:5000/
+python views.py
+open http://localhost:5000
