@@ -5,7 +5,7 @@
 
 body {
 	color:#333;
-	font-size: 16px;
+	font-size: 14px;
 }
 
 
@@ -39,7 +39,8 @@ body {
 	margin-top:300px;
 	text-align:left;
 	padding-left:15px;
-	height: 100px;
+    padding-right:15px;
+	height: 250px;
 	position:absolute;
 	width:180px;
 	-moz-border-radius: 50px;
@@ -78,17 +79,17 @@ h1 {
 			<p style="width:90px; margin-left:30px;font-size:14px;">LINUX</p>
 		</div>
 		<div id="square" style="background:#271192">
-			<p style="margin-left:30px; font-size:12px;">UNKNOWN</p>
+			<p style="width:90px;margin-left:30px; font-size:14px;">VARIOUS</p>
 		</div>
 		<div id="square" style = "background:#E1B594">
-			<p style="width:90px; margin-left:30px; font-size:14px;">MAC OS X</p>
+			<p style="width:90px; margin-left:30px; font-size:14px;">WINDOWS</p>
 		</div>
 		<div id="square" style = "background:#20B8FE">
-			<p style="margin-left:30px; font-size:14px;">iPHONE</p>
+			<p style="width:90px; margin-left:30px; font-size:14px;">MAC OS X</p>
 		</div>
-		<div id="square" style = "background:#90B84C">
-			<p style="margin-left:30px; font-size:14px;">WINDOWS</p>
-		</div>
+		<!-- <div id="square" style = "background:#90B84C">
+			<p style="margin-left:30px; font-size:14px;">IPHONE</p>
+		</div> -->
 	</div>
 </div>
 
@@ -96,6 +97,9 @@ h1 {
 	<h1>Services Running</h1>
 	
 </div>
+<div id="scanner-running">
+	{{ message }}
+	</div>
 
 <script>
 
@@ -107,12 +111,14 @@ var color = d3.scale.category10()
 	.range(["#FF2B1A","#271192","#20B8FE","#E1B594","#90B84C"]);
 
 var force = d3.layout.force()
-    .charge(-90)
+    .charge(-100)
     .linkStrength(0.2)
-    .linkDistance(134)
-    .size([width, height]);
+    .linkDistance(140)
+    // .distance(100)
+    // .gravity(.05)
+	.size([width, height]);
 
-d3.json("static/nmap_for_d3.json", function(error, graph) {
+d3.json("static/json_dictionary.json", function(error, graph) {
   force
       .nodes(graph.nodes)
       .links(graph.links)
@@ -125,31 +131,72 @@ d3.json("static/nmap_for_d3.json", function(error, graph) {
 		.style("float","right")
     	.attr("width", width)
     	.attr("height", height);
-	
-	var link = svg.selectAll(".link")
+
+
+    var link = svg.selectAll(".link")
 		.data(graph.links)
     .enter().append("line")
     	.attr("class", "link")
       // set the attribute, class with the name link on all links
     	.style("stroke-width", function(d) { return Math.sqrt(d.value); });
 
-	var node = svg.selectAll(".node")
+
+    var node_drag = d3.behavior.drag()
+        .on("dragstart", dragstart)
+        .on("drag", dragmove)
+        .on("dragend", dragend);
+
+    function dragstart(d, i) {
+        force.stop() // stops the force auto positioning before you start dragging
+    }
+
+    function dragmove(d, i) {
+        d.px += d3.event.dx;
+        d.py += d3.event.dy;
+        d.x += d3.event.dx;
+        d.y += d3.event.dy; 
+        tick(); // this is the key to make it work together with updating both px,py,x,y on d !
+    }
+
+    function dragend(d, i) {
+        d.fixed = true; // of course set the node to fixed so the force doesn't include the node in its auto positioning stuff
+        tick();
+        force.resume();
+    }
+
+	var node = svg.selectAll("g.node")
 		.data(graph.nodes)
-	.enter().append("circle")
+	.enter().append("svg:g").append("circle")
 		.attr("class", "node")
 		.attr("r", 7)
 		.attr("name", function(d) {
 			return d.name;
 		})
-		.attr("portService", function(d) {
-			return d.PortService;
+		.attr("PortService", function(d) {
+			return d.PortServices;
 		})
-		.style("fill", function(d) { console.log(d.group);return color(d.group); })
-		.call(force.drag);
+		.style("fill", function(d) { console.log(d.Group);return color(d.group); })
+		.call(node_drag);
 
 
-	var servicesBox = d3.select(document.getElementById("services-info"))
-		.append("text");
+	force.on("tick", tick);
+
+	function tick() {
+		link.attr("x1", function(d) { return d.source.x; })
+			.attr("y1", function(d) { return d.source.y; })
+			.attr("x2", function(d) { return d.target.x; })
+			.attr("y2", function(d) { return d.target.y; });
+
+
+	    node.attr("cx", function(d) { return d.x; })
+	   		.attr("cy", function(d) { return d.y; });
+	    	// node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+	};
+
+		var servicesBox = d3.select(document.getElementById("services-info"))
+			.append("text");
+
+
 
 	function checkForEmptyServices(node) {
 
@@ -160,15 +207,18 @@ d3.json("static/nmap_for_d3.json", function(error, graph) {
 		* returns a string of text.  
 		*/
 
-		var name = node.__data__.name
-		var ports = node.__data__.PortService
+		var name = node.__data__.Id
+		var ports = node.__data__.PortServices
+
 		var os_version = node.__data__.OSMatch
+
 		// var os = node._data_.OSMatch
 
-		if (ports === "") {		
+		if (ports.length === 0) {		
 			return "host" + name + " " + "<p>" +  "<p> has no open ports.</p>";
 		} else {
-			return "host " + name + " " + "<p> is running " + "<b>" + ports + "<b></p>";
+			console.log(ports);
+			return "host " + name + " " + "<p> is running " + "<b>" + ports.join(', ') + "<b></p>";
 		}
 	};
 
@@ -217,7 +267,8 @@ d3.json("static/nmap_for_d3.json", function(error, graph) {
 		.on("mousemove", function(){
 			return tooltip.style("top", (event.pageY-10)+"px")
 			.style("left",(event.pageX+10)+"px")
-			.style("max-width","150px")
+			.style("max-width","200px")
+			.style("max-height","300px")
 			.style("background-color", "rgba(163, 224, 255, 0.9)")
 			.style("padding", "10px")
 			.style("border-style", "solid")
@@ -231,23 +282,6 @@ d3.json("static/nmap_for_d3.json", function(error, graph) {
 		})
  
 
-
-	force.on("tick", function() {
-	
-	/*
-  	*  "on": Registers the specified listener to receive events of the specified type from the 
-  	* force layout. Runs the force layout simulation one step.
-  	* Here, we set the positions. 
-  	*/
-    
-    link.attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
-
-    node.attr("cx", function(d) { return d.x; })
-        .attr("cy", function(d) { return d.y; });
-  });
 });
 
 
