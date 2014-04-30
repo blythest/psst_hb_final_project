@@ -3,22 +3,32 @@ import config
 import portscanner
 import subprocess
 import daemon
-
+import os
+from portscanner import LOCKFILE
+import psutil
 
 app = Flask(__name__)
 app.config.from_object(config)
 
 
 
-
 @app.route("/")
 def index():
-    # daemon.main("python portscanner.py")
-    # to do: allow user to override these in a web form
-    # portscanner.main(portscanner.NETMASK, portscanner.IP, portscanner.FILENAME)
-    return render_template("index.html")
+    message = 'Portscanner is not running.'
+    try:
+        pid = os.readlink(LOCKFILE)
+        if psutil.pid_exists(int(pid)):
+            message = 'Portscanner already running.'
+    except OSError:
+        pass
+    return render_template("index.html", message=message)
 
-
+@app.route("/scan")
+def scan():
+    daemon.main("python portscanner.py")
+    return "ok"
+# to do: allow user to override these in a web form
+# portscanner.main(portscanner.NETMASK, portscanner.IP, portscanner.FILENAME)
 
 if __name__ == "__main__":
     app.run(debug=True)
