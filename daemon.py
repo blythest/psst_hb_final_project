@@ -2,23 +2,30 @@ import os
 import sys
 
 
+
 def main(command):
+
+    print "calling fork"
     pid = os.fork()
+    print 'pid', pid
+
     if 0 != pid:
-        sys.exit()
+        return
     sys.stdin.close()
     sys.stdout.close()
     sys.stderr.close()
+
+    # Create a new session.
     os.setsid()
-    
+
 
     pid = os.fork()
-    
+
     if 0 != pid:
-        sys.exit()
+        return
     os.system(command)
     sys.exit()
-   
+
 
 if __name__ == "__main__":
 
