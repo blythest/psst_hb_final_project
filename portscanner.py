@@ -12,7 +12,6 @@ def get_command_output(arguments, stderr=STDOUT):
     arguments: A sequence of command arguments.
     Returns the output of the command line program. 
     """
-    print "[get_command_output] %r" % arguments
     return Popen(arguments, stdout=PIPE,stderr=stderr).communicate()[0]
 
 def find_available_hosts(hostnames):
@@ -42,7 +41,6 @@ def scan(available_hosts):
     """
     print 'scanning now'
     command = ["nmap", "PortScanner()", "-PN", "-O", "-oX", "-"] + available_hosts
-    print 'command ', command
     # print 'command ', command
     scan_output = get_command_output(command)
     # print 'scan output: ', scan_output
@@ -118,11 +116,7 @@ def main(netmask,ip,filename):
 
     
     available_hosts = find_available_hosts(all_hosts)
-    print available_hosts
     results = scan(available_hosts)
-    print results
-   
-
 
     nmap_xml_output = open(filename, 'w')
     nmap_xml_output.write(results)
@@ -152,17 +146,15 @@ if __name__== "__main__":
     os.symlink(str(os.getpid()), LOCKFILE)
 
     netmask = NETMASK
-    print netmask
+
 
     ip = IP
     print ip
 
     filename = FILENAME
-    print filename
 
     opts,vals = getopt(sys.argv[1:],'n:p:f:')
-    # print 'opts ', opts, ' ,', 'vals ',vals
-
+ 
     for option, arg in opts:
         if option == '-n':
             netmask = unicode(arg)
