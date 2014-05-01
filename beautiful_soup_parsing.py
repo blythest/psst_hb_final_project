@@ -1,12 +1,7 @@
 import BeautifulSoup
 import json
 import os
-import datetime
 
-
-def modification_date(filename):
-    t = os.path.getmtime(filename)
-    return datetime.datetime.fromtimestamp(t)
 
 def get_node_id(host):
 
@@ -24,13 +19,13 @@ def get_node_id(host):
             return host_id
 
 def get_group_number_from_name(name):
-    if "Apple Mac OS X" in name:
+    if "iPhone" in name:
         return 1
     elif "Linux" in name:
         return 2
     elif "Microsoft Windows" in name:
         return 3
-    elif "iPhone" in name:
+    elif "Apple Mac OS X" in name:
         return 4
     else:
         return 5
