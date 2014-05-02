@@ -1,13 +1,9 @@
 import os 
 import sys
 
-
-
 def main(command):
 
-    print "calling fork"
     pid = os.fork()
-    print 'pid', pid
 
     if 0 != pid:
         return
@@ -25,7 +21,6 @@ def main(command):
         return
     os.system(command)
     sys.exit()
-
 
 if __name__ == "__main__":
 
