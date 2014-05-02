@@ -1,6 +1,5 @@
 import sys, socket, select, ipaddress, psutil
 import beautiful_soup_parsing
-import nmap
 from subprocess import * 
 import os
 import shlex
@@ -39,15 +38,14 @@ def scan(available_hosts):
     Available hosts: iterable of hostnames (names or IP addresses) that respond to a network.
     Returns iterable of open port numbers, possible os, devices for each available host. 
     """
-    print 'scanning now'
-    command = ["nmap", "PortScanner()", "-PN", "-O", "-oX", "-"] + available_hosts
+    command = ["nmap", "-PN", "-O", "-oX", "-"] + available_hosts
     # print 'command ', command
     scan_output = get_command_output(command)
     # print 'scan output: ', scan_output
     return scan_output
 
 
-def listHosts(ip):
+def list_hosts(ip):
 
     hostsCount = 254
     hosts = []
@@ -68,7 +66,7 @@ def pingscan(hosts):
     return resp
 
 
-def getTraceroute():
+def get_traceroute():
     
     # using traceroute to get public IP addresses
     hops = []
@@ -87,11 +85,13 @@ def getTraceroute():
             hops.append(response.get_trace()[host_key][key][0])
         return hops
 
-"""
-Finds and returns the local IP address as dotted-quad ints on my host computer. 
-"""
 
-def getIP():
+
+def get_IP():
+
+    """
+    Finds and returns the local IP address as dotted-quad ints on my host computer. 
+    """
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # google public dns
@@ -102,7 +102,7 @@ def getIP():
     return ip
 
 NETMASK = u'255.255.255.0'
-IP = getIP()
+IP = get_IP()
 FILENAME = 'static/nmap_raw.xml'
     
 def main(netmask,ip,filename):
@@ -112,7 +112,7 @@ def main(netmask,ip,filename):
 
     snet = int(ipaddress.IPv4Address(source_ip & subnetmask))
     snet = ipaddress.IPv4Address(snet)
-    all_hosts = listHosts(snet)
+    all_hosts = list_hosts(snet)
 
     
     available_hosts = find_available_hosts(all_hosts)
