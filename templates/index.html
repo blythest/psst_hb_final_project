@@ -71,8 +71,10 @@ h1 {
 }
 
 </style>
-
 <div id="os-info">
+       <a style="padding-left:11px;" href="/scan"> Click to run a new scan.</a>
+<div id="option">
+    </div>
 	<h1>Operating Systems</h1>
 	<div class="squares">
 		<div id="square" style="background:#FF2B1A;">
@@ -106,9 +108,6 @@ h1 {
 var width = 900,
     height = 550;
 
-
-var color = d3.scale.category10()
-	.range(["#FF2B1A","#271192","#20B8FE","#E1B594","#90B84C"]);
 
 var force = d3.layout.force()
     .charge(-100)
@@ -175,7 +174,24 @@ d3.json("static/json_dictionary.json", function(error, graph) {
 		.attr("PortService", function(d) {
 			return d.PortServices;
 		})
-		.style("fill", function(d) { console.log(d.Group);return color(d.group); })
+		.style("fill", function(d) { 
+            if (d.group === 1) {
+                return "#E1B594";
+                };
+            if (d.group === 2) {
+                return "#FF2B1A";
+                };
+            if (d.group === 3) {
+                return "#E1B594";
+                };
+            if (d.group === 4) {
+                return "#20B8FE";
+
+                };
+            if (d.group === 5) {
+                return "#271192";
+                };
+            })
 		.call(node_drag);
 
 
